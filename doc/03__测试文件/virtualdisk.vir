@@ -1,0 +1,24 @@
+ViskDiskFile
+Ê±¼ä£º2023/03/15  10:27:29
+ÐÕÃû: jiantingwu
+=================================
+1 C:
+*2 "b.txt" 1 
+*2 "c.png" 1 
+*2 "d.ext" 1 
+*2 "abc.txt" 1 
+*2 "e.txt" 1 
+*1 dir1
+**2 "a.txt" 1 
+**2 "b.txt" 1 
+**2 "ad.txt" 1 
+**2 "c.exe" 1 
+**1 dir1
+***1 dirtest
+****2 "a.txt" 1 
+***2 "a.txt" 1 
+*2 "ab.txt" 1 
+*2 "ab" 1 
+*2 "ac" 1 
+*2 "a" 1 
+*2 "a.txt" 1 

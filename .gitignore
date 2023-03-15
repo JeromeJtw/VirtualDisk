@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+.vs
+/code/Debug
+/code/VirtualDisk/Debug
+/code/x64
+/code/VirtualDisk/x64
