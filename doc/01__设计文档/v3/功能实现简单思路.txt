@@ -1,0 +1,12 @@
+dir		遍历m_file_list打印即可；参数处理
+md		new VdDirectory（名字），并放进当前目录的m_file_list中
+cd		解析path，然后从m_root遍历进行查找，修改m_current_file_node，并打印当前路径
+copy	分为目录和文件。文件就根据目标路径创建；文件夹就递归创建
+del		找到目标文件，从m_file_list中erase指定对象
+rd		找到目标文件夹，从m_file_list中erase指定对象
+ren		修改文件或者文件夹的名字即可
+move	在目标路径下对应文件（夹）对象，然后进行复制，并删除当前路径下的文件（夹）
+mklinek	创建一个VdLinkFile，并用VdAbstractFile*指向目标文件
+save	从m_root开始遍历整个虚拟磁盘项目，使用C++文件操作相关库将虚拟磁盘的结构写入本地文件
+load	使用文件操作相关库读取文件系统中的内容，然后根据内容重构虚拟磁盘系统
+cls		system("cls");
