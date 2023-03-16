@@ -9,6 +9,8 @@ namespace VdTool {
 	std::vector<std::string> SplitStringBySpace(const std::string str);
 	void ClearQuote(std::vector<std::string>& string_list);
 	void BuildRegexByWildcards(std::string& string);
+	bool IsVaildFileName(const std::string& name);
+	bool IsVaildDirName(const std::string& name);
 
 	template<class T>
 	void SafeDeleteSetNull(T*& p);

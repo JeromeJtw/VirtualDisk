@@ -80,6 +80,12 @@ void VdRenCommand::ReName(VdSystemLogic* vd_system)
 		return;
 	}
 	
+	if (!VdTool::IsVaildDirName(m_dst_file_name))
+	{
+		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		return;
+	}
+
 	VdAbstractFile* src_file = vd_system->GetFileByPath(m_src_path);
 	if (src_file == nullptr)
 	{

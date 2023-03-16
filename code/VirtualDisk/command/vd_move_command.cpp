@@ -111,6 +111,12 @@ void VdMoveCommand::MoveDir(VdSystemLogic* vd_system)
 		new_file_name = m_dst_path[0];
 	}
 
+	if (!VdTool::IsVaildDirName(new_file_name))
+	{
+		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		return;
+	}
+
 	VdDirectory* dst_dir = dynamic_cast<VdDirectory*>(m_dst_file);
 	if (dst_dir->IsExistFile(new_file_name) && !m_is_override)
 	{
@@ -152,6 +158,12 @@ void VdMoveCommand::MoveNormalFile(VdSystemLogic* vd_system)
 	{
 		m_dst_file = vd_system->GetCurrentFile();
 		new_file_name = m_dst_path[0];
+	}
+
+	if (!VdTool::IsVaildFileName(new_file_name))
+	{
+		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		return;
 	}
 	
 	VdDirectory* dst_dir = dynamic_cast<VdDirectory*>(m_dst_file);

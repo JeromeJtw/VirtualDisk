@@ -111,6 +111,12 @@ void VdCopyCommand::Copy(VdSystemLogic* vd_system)
 		m_dst_dir = dynamic_cast<VdDirectory*>(vd_system->GetFileByPath(dst_dir_path));
 	}
 
+	if (!VdTool::IsVaildFileName(m_dst_file_name))
+	{
+		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		return;
+	}
+
 	if (m_scr_file->GetAbstractFileType() == DIR && 
 		m_dst_file != nullptr &&
 		m_dst_file->GetAbstractFileType() == DIR)
@@ -174,6 +180,12 @@ void VdCopyCommand::CopyFromPhysicalDisk(VdSystemLogic* vd_system)
 	{
 		std::vector<std::string> dst_dir_path(m_dst_path.begin(), m_dst_path.end() - 1);
 		m_dst_dir = dynamic_cast<VdDirectory*>(vd_system->GetFileByPath(dst_dir_path));
+	}
+
+	if (!VdTool::IsVaildFileName(m_dst_file_name))
+	{
+		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		return;
 	}
 
 	if (m_dst_dir == nullptr)
