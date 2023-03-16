@@ -1,6 +1,7 @@
 #include "vd_md_command.h"
 #include "../file/vd_directory.h"
 #include "../logic/vd_system_logic.h"
+#include "../tool/vd_tool.h"
 #include "../clipp/clipp.h"
 #include <iostream>
 
@@ -29,10 +30,7 @@ bool VdMdCommand::ParseParameter(VdSystemLogic* vd_system)
 	}
 	for (auto para : m_dir_name_list)
 	{
-		if (para.find('*') != std::string::npos || para.find('?') != std::string::npos || 
-			para.find(':') != std::string::npos || para.find('<') != std::string::npos || 
-			para.find('>') != std::string::npos || para.find('|') != std::string::npos || 
-			para.find('.') != std::string::npos)
+		if (!VdTool::IsVaildDirName(para))
 		{
 			return false;
 		}

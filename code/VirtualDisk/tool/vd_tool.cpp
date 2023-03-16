@@ -121,6 +121,29 @@ namespace VdTool {
 		}
 	}
 
+	bool IsVaildFileName(const std::string& name)
+	{
+		if (name.find('*') != std::string::npos || name.find('?') != std::string::npos ||
+			name.find(':') != std::string::npos || name.find('<') != std::string::npos ||
+			name.find('>') != std::string::npos || name.find('|') != std::string::npos )
+		{
+			return false;
+		}
+		return true;
+	}
+
+	bool IsVaildDirName(const std::string& name)
+	{
+		if (name.find('*') != std::string::npos || name.find('?') != std::string::npos ||
+			name.find(':') != std::string::npos || name.find('<') != std::string::npos ||
+			name.find('>') != std::string::npos || name.find('|') != std::string::npos ||
+			name.find('.') != std::string::npos)
+		{
+			return false;
+		}
+		return true;
+	}
+
 	bool CreateDirectory(const std::string path)
 	{
 		std::vector<std::string> file_path_dir = SplitString(path, "/");

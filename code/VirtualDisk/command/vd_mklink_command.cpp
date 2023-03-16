@@ -76,6 +76,11 @@ void VdMklinkCommand::MakeLink(VdSystemLogic* vd_system)
 	std::replace(m_link_string.begin(), m_link_string.end(), '/', '\\');
 	std::vector<std::string> dst_path = VdTool::SplitString(m_link_string, "\\");
 	std::string link_file_name = *(dst_path.end() - 1);
+	if (!VdTool::IsVaildFileName(link_file_name))
+	{
+		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		return;
+	}
 
 	VdDirectory* dst_dir;
 	if (dst_path.size() == 1)

@@ -2,6 +2,7 @@
 #include "../file/vd_directory.h"
 #include "../file/vd_file.h"
 #include "../logic/vd_system_logic.h"
+#include "../tool/vd_tool.h"
 #include "vd_mf_command.h"
 #include <iostream>
 
@@ -76,6 +77,12 @@ void VdMfCommand::CreateFile(VdSystemLogic* vd_system)
 	if (m_file_name.find("\\") != std::string::npos || m_file_name.find("/") != std::string::npos)
 	{
 		std::cout << "文件名不能包含'\\'或'/'" << std::endl;
+		return;
+	}
+
+	if (!VdTool::IsVaildFileName(m_file_name))
+	{
+		std::cout << "文件名、目录名语法不正确。" << std::endl;
 		return;
 	}
 
