@@ -25,6 +25,8 @@ public:
 	void PrintHelp() override;
 	void Copy(VdSystemLogic* vd_system);
 	void CopyFromPhysicalDisk(VdSystemLogic* vd_system);
+	bool CopyPhysicalDir(VdSystemLogic* vd_system);
+	bool CopyPhysicalFile(VdSystemLogic* vd_system);
 	void CopyNormalFile(VdSystemLogic* vd_system);
 	void CopyLinkFile(VdSystemLogic* vd_system);
 	void CopyDir(VdSystemLogic* vd_system);
@@ -40,6 +42,7 @@ private:
 
 	VdDirectory*				m_dst_dir = nullptr;
 	std::string					m_dst_file_name = "";
+	bool						m_is_copy_from_physical_disk = false;
 };
 
 REGISTER_COMMAND_FACTORY(VdCopyCommand, "copy");

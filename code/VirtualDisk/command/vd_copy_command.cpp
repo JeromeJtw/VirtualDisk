@@ -30,18 +30,35 @@ void VdCopyCommand::ClearParameter()
 
 	m_dst_dir = nullptr;
 	m_dst_file_name = "";
-
+	m_is_copy_from_physical_disk = false;
 }
 
 bool VdCopyCommand::ParseParameter(VdSystemLogic* vd_system)
 {
 	std::vector<std::string> command_para = vd_system->GetCommandPara();
+	if (command_para.size() == 2)
+	{
+		m_scr_file_string = command_para[1];
+		if ((*m_scr_file_string.begin()) == '@')
+		{
+			m_is_copy_from_physical_disk = true;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
 	if (command_para.size() < 3)
 	{
 		return false;
 	}
 	m_scr_file_string = command_para[1];
 	m_dst_file_string = command_para[2];
+	if ((*m_scr_file_string.begin()) == '@')
+	{
+		m_is_copy_from_physical_disk = true;
+	}
 	return true;
 }
 
@@ -74,7 +91,7 @@ void VdCopyCommand::PrintHelp()
 void VdCopyCommand::Copy(VdSystemLogic* vd_system)
 {
 	//如果是物理磁盘路径，从物理磁盘拷贝
-	if ((*m_scr_file_string.begin()) == '@')
+	if (m_is_copy_from_physical_disk)
 	{
 		CopyFromPhysicalDisk(vd_system);
 		return;
@@ -152,13 +169,61 @@ void VdCopyCommand::Copy(VdSystemLogic* vd_system)
 void VdCopyCommand::CopyFromPhysicalDisk(VdSystemLogic* vd_system)
 {
 	m_scr_file_string.erase(m_scr_file_string.begin());
-	
+	int file_type = VdTool::GetFileTypeByPath(m_scr_file_string.c_str());
+	bool result = false;
+	switch (file_type)
+	{
+	case ISDIR:
+		result = CopyPhysicalDir(vd_system);
+		break;
+	case ISFILE:
+		result = CopyPhysicalFile(vd_system);
+		break;
+	case UNKOWN:
+		std::cout << "未知文件，无法复制！" << std::endl;
+		break;
+	case ERR:
+		std::cout << "文件无法打开，无法复制！" << std::endl;
+		break;
+	default:
+		break;
+	}
+	if (result)
+	{
+		std::cout << "复制完成!" << std::endl;
+	}
+}
+
+bool VdCopyCommand::CopyPhysicalDir(VdSystemLogic* vd_system)
+{
+	std::vector<std::string> file_list;
+	VdTool::GetFilesByPath(m_scr_file_string, file_list);
+	std::string src_file = m_scr_file_string;
+	std::string dst_file = m_dst_file_string;
+	for (auto file : file_list)
+	{
+		m_scr_file_string = src_file + "\\" + file;
+		m_dst_file_string = dst_file + "\\" + file;
+		CopyPhysicalFile(vd_system);
+	}
+	file_list.clear();
+	return true;
+}
+
+bool VdCopyCommand::CopyPhysicalFile(VdSystemLogic* vd_system)
+{
 	std::ifstream src_file;
 	src_file.open(m_scr_file_string, std::ios::in | std::ios::binary | std::ios::ate);
 	if (!src_file.is_open())
 	{
 		std::cout << m_scr_file_string << " 文件打开失败！请检查。" << std::endl;
-		return;
+		return false;
+	}
+
+	if (m_dst_file_string.empty())
+	{
+		std::cout << "缺少目标文件名" << std::endl;
+		return false;
 	}
 
 	std::replace(m_dst_file_string.begin(), m_dst_file_string.end(), '/', '\\');
@@ -167,8 +232,8 @@ void VdCopyCommand::CopyFromPhysicalDisk(VdSystemLogic* vd_system)
 
 	if (m_dst_file != nullptr)
 	{
-		std::cout << "目标文件已存在，无法进行复制！" << std::endl;
-		return;
+		std::cout << m_dst_file->GetAbstractFileName() << "目标文件已存在，无法进行复制！" << std::endl;
+		return false;
 	}
 
 	m_dst_file_name = (*(m_dst_path.end() - 1));
@@ -185,13 +250,13 @@ void VdCopyCommand::CopyFromPhysicalDisk(VdSystemLogic* vd_system)
 	if (!VdTool::IsVaildFileName(m_dst_file_name))
 	{
 		std::cout << "文件名、目录名语法不正确。" << std::endl;
-		return;
+		return false;
 	}
 
 	if (m_dst_dir == nullptr)
 	{
-		std::cout << "系统找不到指定的路径！" << std::endl;
-		return;
+		std::cout << "系统找不到指定的目标路径！" << std::endl;
+		return false;
 	}
 
 	int file_size = (int)src_file.tellg();
@@ -203,7 +268,7 @@ void VdCopyCommand::CopyFromPhysicalDisk(VdSystemLogic* vd_system)
 	VdFile* new_file = new VdFile(m_dst_file_name, NORMALFILE, file_size, buffer);
 	delete buffer;
 	m_dst_dir->AddAbstractFile(new_file);
-	std::cout << "复制成功!" << std::endl;
+	return true;
 }
 
 void VdCopyCommand::CopyNormalFile(VdSystemLogic* vd_system)
