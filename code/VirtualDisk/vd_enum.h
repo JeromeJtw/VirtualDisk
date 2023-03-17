@@ -16,3 +16,11 @@ enum REMOVERESULT
 	NOTFIND,
 	CANNOTRM
 };
+
+enum PhysicalFileType
+{
+	ISDIR = 1,
+	ISFILE,
+	UNKOWN,
+	ERR
+};

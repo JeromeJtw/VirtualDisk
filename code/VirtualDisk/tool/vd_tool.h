@@ -11,6 +11,9 @@ namespace VdTool {
 	void BuildRegexByWildcards(std::string& string);
 	bool IsVaildFileName(const std::string& name);
 	bool IsVaildDirName(const std::string& name);
+	int GetFileTypeByPath(const char* path);
+	void GetFilesByPath(std::string path, std::vector<std::string>& files);
+
 
 	template<class T>
 	void SafeDeleteSetNull(T*& p);
