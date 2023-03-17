@@ -133,8 +133,10 @@ void VdSaveCommand::SaveFile(VdAbstractFile* save_file, std::string prefix)
 	{
 		VdFile* file = dynamic_cast<VdFile*>(save_file);
 		std::string file_name = "\"" + file->GetAbstractFileName() + "\"";
+		std::string file_content(file->GetFileContent(), file->GetFileSize());
+		std::string save_file_content = "\"" + file_content + "\"";
 		m_file << prefix << file->GetAbstractFileType() << " " << file_name << " " << file->GetFileSize()
-			<< " " << file->GetFileContent() << std::endl;
+			<< " " << save_file_content << std::endl;
 	}
 	else if (save_file->GetAbstractFileType() == LINKFILE)
 	{
