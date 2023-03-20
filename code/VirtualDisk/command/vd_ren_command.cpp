@@ -79,12 +79,6 @@ void VdRenCommand::ReName(VdSystemLogic* vd_system)
 		std::cout << "操作不合法！请更换为非'.''..'的名字" << std::endl;
 		return;
 	}
-	
-	if (!VdTool::IsVaildDirName(m_dst_file_name))
-	{
-		std::cout << "文件名、目录名语法不正确。" << std::endl;
-		return;
-	}
 
 	VdAbstractFile* src_file = vd_system->GetFileByPath(m_src_path);
 	if (src_file == nullptr)
@@ -92,6 +86,25 @@ void VdRenCommand::ReName(VdSystemLogic* vd_system)
 		std::cout << "系统找不到指定路径！" << std::endl;
 		return;
 	}
+
+	if (src_file->GetAbstractFileType() == DIR)
+	{
+		if (!VdTool::IsVaildDirName(m_dst_file_name))
+		{
+			std::cout << "文件名、目录名语法不正确。" << std::endl;
+			return;
+		}
+	}
+	else
+	{
+		if (!VdTool::IsVaildFileName(m_dst_file_name))
+		{
+			std::cout << "文件名、目录名语法不正确。" << std::endl;
+			return;
+		}
+	}
+
+
 
 	std::vector<VdAbstractFile*> file_list;
 	VdDirectory* parent_dir = dynamic_cast<VdDirectory*>(src_file->GetParent());
