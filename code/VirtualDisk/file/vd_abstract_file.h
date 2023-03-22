@@ -34,6 +34,8 @@ public:
 	std::string GetParentPath();
 	int GetAbstractFileType() const { return m_vd_file_type; }
 	std::string GetAbstractFileName() const { return m_name; }
+	std::string GetParentSerializationFileName();
+	std::string GetSerializationFileName();
 protected:
 	std::string m_name;
 	VdFileType m_vd_file_type;

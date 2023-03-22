@@ -31,6 +31,7 @@ public:
 	void PostHandleLinkFile(VdSystemLogic* vd_system,VdDirectory* dir);
 private:
 	std::string		m_scr_file = "";
+	std::string		m_scr_path = "";
 	VdDirectory*	m_upper_level_dir = nullptr;
 };
 
