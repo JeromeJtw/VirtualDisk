@@ -13,7 +13,8 @@ namespace VdTool {
 	bool IsVaildDirName(const std::string& name);
 	int GetFileTypeByPath(const char* path);
 	void GetFilesByPath(std::string path, std::vector<std::string>& files);
-
+	unsigned int RandomChar();
+	std::string GenerateHex(const unsigned int len);
 
 	template<class T>
 	void SafeDeleteSetNull(T*& p);

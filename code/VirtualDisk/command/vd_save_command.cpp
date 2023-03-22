@@ -9,6 +9,9 @@
 #include <iostream>
 #include <time.h>
 
+
+const static std::string SERIALIZATIONPREFIXNAME = "VituralDisk";
+
 VdSaveCommand::VdSaveCommand()
 {
 
@@ -22,6 +25,7 @@ VdSaveCommand::~VdSaveCommand()
 void VdSaveCommand::ClearParameter()
 {
 	m_dst_file = "";
+	m_dst_path = "";
 	m_file.close();
 }
 
@@ -67,15 +71,17 @@ void VdSaveCommand::Save(VdSystemLogic* vd_system)
 		return;
 	}
 
+	m_dst_path = m_dst_file;
 	size_t n = m_dst_file.find_last_of('/');
 	std::string file_name = m_dst_file.substr(n + 1);
 	std::string file_path = m_dst_file.substr(0, strlen(m_dst_file.c_str()) - strlen(file_name.c_str()) - 1);
-	if (!VdTool::CreateDirectory(file_path))
+	if (!VdTool::CreateDirectory(m_dst_file))
 	{
-		std::cout << "无法创建文件，序列化失败！" << std::endl;
+		std::cout << "序列化失败！请给一个合法的文件夹路径。" << std::endl;
 		return;
 	}
 	
+	m_dst_file += "/" + file_name + ".vir";
 	m_file.open(m_dst_file, std::ios::out);
 	if (!m_file.is_open())
 	{
@@ -133,10 +139,25 @@ void VdSaveCommand::SaveFile(VdAbstractFile* save_file, std::string prefix)
 	{
 		VdFile* file = dynamic_cast<VdFile*>(save_file);
 		std::string file_name = "\"" + file->GetAbstractFileName() + "\"";
-		std::string file_content(file->GetFileContent(), file->GetFileSize());
-		std::string save_file_content = "\"" + file_content + "\"";
+		std::string serialization_file_name = "\"" + SERIALIZATIONPREFIXNAME + file->GetSerializationFileName() + "\"";
 		m_file << prefix << file->GetAbstractFileType() << " " << file_name << " " << file->GetFileSize()
-			<< " " << save_file_content << std::endl;
+			<< " " << serialization_file_name << std::endl;
+
+		/*if (file->GetFileSize() > 0)
+		{*/
+			std::string file_content(file->GetFileContent(), file->GetFileSize());
+			std::string normal_file_path = m_dst_path + "/" + SERIALIZATIONPREFIXNAME + file->GetSerializationFileName();
+			std::ofstream normal_file;
+			normal_file.open(normal_file_path, std::ios::out | std::ios::binary);
+			
+			if (!normal_file.is_open())
+			{
+				std::cout << file->GetCurrentPath() << "无法序列化，请检查！" << std::endl;
+				return;
+			}
+			normal_file << file_content;
+			normal_file.close();
+		/*}*/
 	}
 	else if (save_file->GetAbstractFileType() == LINKFILE)
 	{

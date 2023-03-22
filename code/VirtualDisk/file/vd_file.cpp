@@ -23,7 +23,7 @@ VdFile::VdFile(std::string name, VdFileType file_type, int file_size, const char
 	m_file_size = file_size;
 	m_file_content = (char*)malloc(m_file_size);
 	memset(m_file_content, 0, m_file_size);
-	memcpy(this->m_file_content, file_content, this->m_file_size);
+	memcpy_s(this->m_file_content,file_size, file_content, this->m_file_size);
 }
 
 VdFile::~VdFile()

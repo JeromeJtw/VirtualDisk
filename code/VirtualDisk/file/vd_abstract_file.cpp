@@ -65,3 +65,22 @@ std::string VdAbstractFile::GetParentPath()
 	}
 	return m_parent->GetParentPath() + "\\" + m_name;
 }
+
+std::string VdAbstractFile::GetSerializationFileName()
+{
+	std::string name = GetParentSerializationFileName();
+	return name;
+}
+
+std::string VdAbstractFile::GetParentSerializationFileName()
+{
+	if (m_parent == nullptr)
+	{
+		return "";
+	}
+	if (m_parent->GetAbstractFileName() == "C:")
+	{
+		return "C" + m_name;
+	}
+	return m_parent->GetParentSerializationFileName() + m_name;
+}

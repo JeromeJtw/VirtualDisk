@@ -1,6 +1,8 @@
 #include "vd_tool.h"
 #include <direct.h>
 #include <io.h>
+#include <sstream>
+#include <random>
 
 namespace VdTool {
 	std::vector<std::string> SplitString(const std::string& src, const std::string& delimiter)
@@ -43,12 +45,10 @@ namespace VdTool {
 		bool inQuote = false;
 		for (int i = 0; i <= len; i++)
 		{
-			//if (str[i] == '"' && (i == 0 || str[i - 1] != '\\'))
 			if (str[i] == '"')
 			{
 				inQuote = !inQuote;
 			}
-			//else if (isspace(str[i]) || str[i] == '\0')
 			else if (str[i] == ' ' || str[i] == '\0')
 			{
 				if (!inQuote)
@@ -179,17 +179,36 @@ namespace VdTool {
 			{
 				if ((fileinfo.attrib &  _A_SUBDIR))
 				{
-					/*if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
-						getFiles(p.assign(path).append("\\").append(fileinfo.name), files);*/
+					;
 				}
 				else
 				{
-					//files.push_back(p.assign(path).append("\\").append(fileinfo.name));
 					files.push_back(fileinfo.name);
 				}
 			} while (_findnext(hFile, &fileinfo) == 0);
 			_findclose(hFile);
 		}
+	}
+
+	unsigned int RandomChar()
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<> dis(0, 255);
+		return dis(gen);
+	}
+
+	std::string GenerateHex(const unsigned int len)
+	{
+		std::stringstream ss;
+		for (unsigned int i = 0; i < len; i++) {
+			const auto rc = RandomChar();
+			std::stringstream hexstream;
+			hexstream << std::hex << rc;
+			auto hex = hexstream.str();
+			ss << (hex.length() < 2 ? '0' + hex : hex);
+		}
+		return ss.str();
 	}
 
 	bool CreateDirectory(const std::string path)
@@ -212,3 +231,4 @@ namespace VdTool {
 }
 
 std::unordered_map<int, std::string> FILE_TYPE_STRING = { {(int)DIR,"<DIR>"},{(int)NORMALFILE,""},{(int)LINKFILE,"<SYMLINK>"} };
+

@@ -4,6 +4,7 @@
 #include "../logic/vd_system_logic.h"
 #include "../tool/vd_tool.h"
 #include "vd_load_command.h"
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 
@@ -20,6 +21,7 @@ VdLoadCommand::~VdLoadCommand()
 void VdLoadCommand::ClearParameter()
 {
 	m_scr_file = "";
+	m_scr_path = "";
 }
 
 bool VdLoadCommand::ParseParameter(VdSystemLogic* vd_system)
@@ -58,6 +60,11 @@ void VdLoadCommand::PrintHelp()
 void VdLoadCommand::LoadFromFile(VdSystemLogic* vd_system)
 {
 	std::ifstream src_file;
+	std::replace(m_scr_file.begin(), m_scr_file.end(), '\\', '/');
+	m_scr_path = m_scr_file;
+	size_t flag = m_scr_file.find_last_of('/');
+	std::string src_file_name = m_scr_file.substr(flag + 1);
+	m_scr_file += "/" + src_file_name + ".vir";
 	src_file.open(m_scr_file);
 	if (!src_file.is_open())
 	{
@@ -74,20 +81,19 @@ void VdLoadCommand::LoadFromFile(VdSystemLogic* vd_system)
 		return;
 	}
 
-	char buffer[10240];
 	int index = 1;
-	std::string buffer_string;
 	int pre_prefix_count = 1;
 	VdDirectory* parent_dir = disk_c;
-	while (!src_file.eof())
+
+	std::string line_content;
+	while (getline(src_file,line_content))
 	{
-		src_file.getline(buffer, 10240);
-		if (index == 1 && strcmp(buffer,"ViskDiskFile") != 0)
+		if (index == 1 && strcmp(line_content.c_str(), "ViskDiskFile") != 0)
 		{
 			std::cout << "文件为非法的虚拟磁盘文件，无法进行反序列化！" << std::endl;
 			break;
 		}
-		if (index == 5 && strcmp(buffer, "1 C:") != 0)
+		if (index == 5 && strcmp(line_content.c_str(), "1 C:") != 0)
 		{
 			std::cout << "文件为非法的虚拟磁盘文件，无法进行反序列化！" << std::endl;
 			break;
@@ -97,15 +103,14 @@ void VdLoadCommand::LoadFromFile(VdSystemLogic* vd_system)
 			index++;
 			continue;
 		}
-		buffer_string = buffer;
-		int prefix_index = (int)buffer_string.find_last_of("*");
+		int prefix_index = (int)line_content.find_last_of("*");
 		if (prefix_index == -1)
 		{
 			index++;
 			continue;
 		}
-		std::string file_type_string = buffer_string.substr(prefix_index + 1, 1);
-		std::string file_info = buffer_string.substr(prefix_index + 3);
+		std::string file_type_string = line_content.substr(prefix_index + 1, 1);
+		std::string file_info = line_content.substr(prefix_index + 3);
 		int file_type = atoi(file_type_string.c_str());
 
 		if (prefix_index + 1 == pre_prefix_count)
@@ -128,7 +133,6 @@ void VdLoadCommand::LoadFromFile(VdSystemLogic* vd_system)
 			}
 			pre_prefix_count = prefix_index + 1;
 		}
-		
 
 		switch (file_type)
 		{
@@ -162,8 +166,21 @@ void VdLoadCommand::CreateNormalFile(const std::string file_info, VdDirectory* p
 	}
 	else if (infos.size() == 3)
 	{
-		const char* content = infos[2].c_str();
-		file = new VdFile(infos[0], NORMALFILE, atoi(infos[1].c_str()), content);
+		std::string file_name = m_scr_path + "/" + infos[2];
+		std::ifstream normal_file;
+		normal_file.open(file_name, std::ios::in | std::ios::binary | std::ios::ate);
+		if (!normal_file.is_open())
+		{
+			std::cout << infos[0] << "无法反序列化，请检查！" << std::endl;
+			return;
+		}
+		int file_size = atoi(infos[1].c_str());
+		normal_file.seekg(0, std::ios::beg);
+		char* buffer = new char[file_size];
+		normal_file.read(buffer, file_size);
+		normal_file.close();
+		file = new VdFile(infos[0], NORMALFILE, file_size, buffer);
+		delete buffer;
 	}
 	if (!parent->AddAbstractFile(file))
 	{

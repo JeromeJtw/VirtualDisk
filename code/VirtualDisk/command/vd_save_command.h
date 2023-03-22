@@ -30,6 +30,7 @@ public:
 	void SaveFile(VdAbstractFile* save_file, std::string prefix);
 private:
 	std::string			m_dst_file;
+	std::string			m_dst_path;
 	std::ofstream		m_file;
 };
 
