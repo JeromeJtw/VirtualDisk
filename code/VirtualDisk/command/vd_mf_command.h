@@ -23,10 +23,13 @@ public:
 	bool ParseParameter(VdSystemLogic* vd_system) override;
 	void Execute(VdSystemLogic* vd_system) override;
 	void PrintHelp() override;
-	void CreateFile(VdSystemLogic* vd_system);
+
 private:
-	std::string m_file_name = "";
-	int m_file_size = 0;
+	void CreateFile(VdSystemLogic* vd_system);
+
+private:
+	std::string		m_file_name;
+	int				m_file_size = 0;
 };
 
 REGISTER_COMMAND_FACTORY(VdMfCommand, "mf");

@@ -21,7 +21,6 @@ void VdClsCommand::Execute(VdSystemLogic* vd_system)
 	}
 }
 
-
 void VdClsCommand::PrintHelp()
 {
 	std::cout << "Çå³ýÆÁÄ»¡£" << std::endl;

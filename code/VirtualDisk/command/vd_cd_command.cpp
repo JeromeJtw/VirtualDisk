@@ -8,7 +8,7 @@
 
 VdCdCommand::VdCdCommand()
 {
-	m_dst_path = "";
+
 }
 
 VdCdCommand::~VdCdCommand()
@@ -54,11 +54,10 @@ void VdCdCommand::Execute(VdSystemLogic* vd_system)
 		//解析path，并切换m_current_file_node
 		std::replace(m_dst_path.begin(), m_dst_path.end(), '/', '\\');
 		std::vector<std::string> dst_path_list = VdTool::SplitString(m_dst_path, "\\");
-		int dst_path_length = (int)dst_path_list.size();
 		bool succeeded = true;
-		for (int i = 0; i < dst_path_length; i++)
+		for (auto iter : dst_path_list)
 		{
-			if (!ChangeCurrentDir(vd_system, dst_path_list[i]))
+			if (!ChangeCurrentDir(vd_system, iter))
 			{
 				succeeded = false;
 				break;
@@ -77,7 +76,7 @@ void VdCdCommand::PrintHelp()
 	std::cout << "显示当前目录名或改变当前目录。" << std::endl;
 }
 
-bool VdCdCommand::ChangeCurrentDir(VdSystemLogic* vd_system, std::string dir_name)
+bool VdCdCommand::ChangeCurrentDir(VdSystemLogic* vd_system, const std::string& dir_name)
 {
 	return vd_system->ChangeActiveDir(dir_name);
 }

@@ -4,6 +4,7 @@
 #include "vd_del_command.h"
 #include <algorithm>
 #include <iostream>
+static const std::string DELETERECURSIONFLAGSTR = "/s";
 
 VdDelCommand::VdDelCommand()
 {
@@ -17,7 +18,7 @@ VdDelCommand::~VdDelCommand(){
 bool VdDelCommand::ParseParameter(VdSystemLogic* vd_system)
 {
 	std::vector<std::string> command_para = vd_system->GetCommandPara();
-	auto iter = find(command_para.begin(), command_para.end(), "/s");
+	auto iter = find(command_para.begin(), command_para.end(), DELETERECURSIONFLAGSTR);
 	if (iter != command_para.end())
 	{
 		m_recursion_delete = true;
@@ -100,7 +101,7 @@ void VdDelCommand::DeleteFile(VdSystemLogic* vd_system)
 
 		for (auto delete_file : delete_file_list)
 		{
-			int result;
+			int result = -1;
 			bool is_dir = false;
 			std::string file_path_string = delete_file->GetCurrentPath();
 			if (delete_file->GetAbstractFileType() == DIR)
@@ -124,7 +125,6 @@ void VdDelCommand::DeleteFile(VdSystemLogic* vd_system)
 
 void VdDelCommand::RecursionDelete(VdSystemLogic* vd_system)
 {
-	//TODO：递归删除文件，不删除文件夹
 	for (auto iter : m_dst_file_list)
 	{
 		std::replace(iter.begin(), iter.end(), '/', '\\');
@@ -174,7 +174,7 @@ void VdDelCommand::RecursionDelete(VdSystemLogic* vd_system)
 	}
 }
 
-void VdDelCommand::RecursionDeleteFile(VdSystemLogic* vd_system, VdDirectory* work_dir, const std::string vague_name)
+void VdDelCommand::RecursionDeleteFile(VdSystemLogic* vd_system, VdDirectory* work_dir, const std::string& vague_name)
 {
 	if (work_dir == nullptr)
 	{
@@ -201,7 +201,7 @@ void VdDelCommand::RecursionDeleteFile(VdSystemLogic* vd_system, VdDirectory* wo
 	}
 }
 
-void VdDelCommand::PrintResult(const std::string file_name, const int result, const bool is_dir)
+void VdDelCommand::PrintResult(const std::string& file_name, const int result, const bool is_dir)
 {
 	switch (result)
 	{
@@ -221,8 +221,14 @@ void VdDelCommand::PrintResult(const std::string file_name, const int result, co
 	case NOTFIND:
 		std::cout << "系统无法找到" << file_name << "文件。" << std::endl;
 		break;
+	case ISUSING:
+		std::cout << "' " << file_name << " '" << "文件正在使用。" << std::endl;
+		break;
+	case NOTEMPTY:
+		std::cout << "文件不为空。" << std::endl;
+		break;
 	default:
+		std::cout << "未知错误。" << std::endl;
 		break;
 	}
-
 }

@@ -1,8 +1,9 @@
 #include "vd_abstract_file.h"
 #include <time.h>
 #include <iostream>
+#include "../tool/vd_tool.h"
 
-VdAbstractFile::VdAbstractFile(std::string name, VdFileType file_type)
+VdAbstractFile::VdAbstractFile(std::string name, int file_type)
 	: m_name(name), m_vd_file_type(file_type)
 {
 	m_parent = nullptr;
@@ -30,14 +31,14 @@ void VdAbstractFile::PrintPath()
 	std::cout << m_name << "\\>";
 }
 
-void VdAbstractFile::ReName(const std::string new_name)
+void VdAbstractFile::ReName(const std::string& new_name)
 {
 	m_name = new_name;
 }
 
-bool VdAbstractFile::AddAbstractFile(VdAbstractFile* vd_abstract_file)
+int VdAbstractFile::AddAbstractFile(VdAbstractFile* vd_abstract_file)
 {
-	return false;
+	return ADDSUCCESSED;
 }
 
 void VdAbstractFile::PrintFileInfo()
@@ -78,9 +79,9 @@ std::string VdAbstractFile::GetParentSerializationFileName()
 	{
 		return "";
 	}
-	if (m_parent->GetAbstractFileName() == "C:")
+	if (m_parent->GetAbstractFileName() == ROOTDISKNAME)
 	{
-		return "C" + m_name;
+		return CDISKNAME + m_name;
 	}
 	return m_parent->GetParentSerializationFileName() + m_name;
 }

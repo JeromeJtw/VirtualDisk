@@ -24,3 +24,17 @@ enum PhysicalFileType
 	UNKOWN,
 	ERR
 };
+
+enum InVaildNameType
+{
+	VAILDNAME = 1,//有效的名字
+	TOOLONG,
+	HASINVAILDCHAR
+};
+
+enum AddFileResult
+{
+	ADDSUCCESSED = 1,
+	PATHTOOLONG,
+	EXISTSAMENAMEFILE
+};

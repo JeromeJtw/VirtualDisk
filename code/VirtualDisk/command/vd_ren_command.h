@@ -24,7 +24,9 @@ public:
 	void Execute(VdSystemLogic* vd_system) override;
 	void PrintHelp() override;
 
+private:
 	void ReName(VdSystemLogic* vd_system);
+
 private:
 	std::string					m_src_file_name;
 	std::vector<std::string>	m_src_path;

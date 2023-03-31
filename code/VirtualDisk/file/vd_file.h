@@ -26,6 +26,6 @@ public:
 	int GetFileSize() const { return m_file_size; }
 	char* GetFileContent() const { return m_file_content; }
 private:
-	int m_file_size;
-	char* m_file_content = nullptr;
+	int			m_file_size;
+	char*		m_file_content = nullptr;
 };

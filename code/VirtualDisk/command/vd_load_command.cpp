@@ -64,7 +64,7 @@ void VdLoadCommand::LoadFromFile(VdSystemLogic* vd_system)
 	m_scr_path = m_scr_file;
 	size_t flag = m_scr_file.find_last_of('/');
 	std::string src_file_name = m_scr_file.substr(flag + 1);
-	m_scr_file += "/" + src_file_name + ".vir";
+	m_scr_file += "/" + src_file_name + SERIALIZATIONFILESUFFIX;
 	src_file.open(m_scr_file);
 	if (!src_file.is_open())
 	{
@@ -91,19 +91,19 @@ void VdLoadCommand::LoadFromFile(VdSystemLogic* vd_system)
 		if (index == 1 && strcmp(line_content.c_str(), "ViskDiskFile") != 0)
 		{
 			std::cout << "文件为非法的虚拟磁盘文件，无法进行反序列化！" << std::endl;
-			break;
+			return;
 		}
 		if (index == 5 && strcmp(line_content.c_str(), "1 C:") != 0)
 		{
 			std::cout << "文件为非法的虚拟磁盘文件，无法进行反序列化！" << std::endl;
-			break;
+			return;
 		}
 		if (index <= 5)
 		{
 			index++;
 			continue;
 		}
-		int prefix_index = (int)line_content.find_last_of("*");
+		int prefix_index = (int)line_content.find_last_of(SERIALIZATIONPREFIX);
 		if (prefix_index == -1)
 		{
 			index++;
@@ -155,11 +155,15 @@ void VdLoadCommand::LoadFromFile(VdSystemLogic* vd_system)
 	std::cout << "反序列化成功！" << std::endl;
 }
 
-void VdLoadCommand::CreateNormalFile(const std::string file_info, VdDirectory* parent)
+void VdLoadCommand::CreateNormalFile(const std::string& file_info, VdDirectory* parent)
 {
 	std::vector<std::string> infos = VdTool::SplitStringBySpace(file_info);
 	VdTool::ClearQuote(infos);
 	VdFile* file = nullptr;
+	if (infos.size() < 2)
+	{
+		return;
+	}
 	if (infos.size() == 2)
 	{
 		file = new VdFile(infos[0], NORMALFILE, atoi(infos[1].c_str()));
@@ -181,18 +185,19 @@ void VdLoadCommand::CreateNormalFile(const std::string file_info, VdDirectory* p
 		normal_file.close();
 		file = new VdFile(infos[0], NORMALFILE, file_size, buffer);
 		delete buffer;
+		buffer = nullptr;
 	}
-	if (!parent->AddAbstractFile(file))
+	if (parent->AddAbstractFile(file) == EXISTSAMENAMEFILE)
 	{
 		parent->DeleteSubFileByName(infos[0]);
 		parent->AddAbstractFile(file);
 	}
 }
 
-void VdLoadCommand::CreateDir(const std::string file_info, VdDirectory* parent)
+void VdLoadCommand::CreateDir(const std::string& file_info, VdDirectory* parent)
 {
 	VdDirectory* dir = new VdDirectory(file_info, DIR);
-	if (!parent->AddAbstractFile(dir))
+	if (parent->AddAbstractFile(dir) == EXISTSAMENAMEFILE)
 	{
 		VdDirectory* temp_dir = dynamic_cast<VdDirectory*>(parent->GetSubFileByName(file_info));
 		temp_dir->RecursionDestoryDir();
@@ -202,13 +207,13 @@ void VdLoadCommand::CreateDir(const std::string file_info, VdDirectory* parent)
 	m_upper_level_dir = dir;
 }
 
-void VdLoadCommand::CreateLinkFile(const std::string file_info, VdDirectory* parent)
+void VdLoadCommand::CreateLinkFile(const std::string& file_info, VdDirectory* parent)
 {
 	std::vector<std::string> infos = VdTool::SplitStringBySpace(file_info);
 	VdTool::ClearQuote(infos);
 	VdLinkFile* link_file = new VdLinkFile(infos[0], LINKFILE);
 	link_file->SetLinkFilePath(infos[1]);
-	if (!parent->AddAbstractFile(link_file))
+	if (parent->AddAbstractFile(link_file) == EXISTSAMENAMEFILE)
 	{
 		parent->DeleteSubFileByName(infos[0]);
 		parent->AddAbstractFile(link_file);

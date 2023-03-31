@@ -76,9 +76,16 @@ void VdMklinkCommand::MakeLink(VdSystemLogic* vd_system)
 	std::replace(m_link_string.begin(), m_link_string.end(), '/', '\\');
 	std::vector<std::string> dst_path = VdTool::SplitString(m_link_string, "\\");
 	std::string link_file_name = *(dst_path.end() - 1);
-	if (!VdTool::IsVaildFileName(link_file_name))
+
+	int res = VdTool::IsVaildFileName(link_file_name);
+	if (res == TOOLONG)
 	{
-		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		std::cout << "链接文件名超过" << MAX_NAME_LENGTH << "个字符，无法创建。" << std::endl;
+		return;
+	}
+	if (res == HASINVAILDCHAR)
+	{
+		std::cout << "链接文件名包含非法字符，无法创建。" << std::endl;
 		return;
 	}
 
@@ -99,16 +106,15 @@ void VdMklinkCommand::MakeLink(VdSystemLogic* vd_system)
 		return;
 	}
 
-	VdAbstractFile* dst_file = dst_dir->GetSubFileByName(link_file_name);
-	if (dst_file && dst_file->GetAbstractFileType() == LINKFILE)
-	{
-		std::cout << "当文件已存在时，无法创建该符号链接！" << std::endl;
-		return;
-	}
-
 	//创建链接
 	VdLinkFile* link_file = new VdLinkFile(link_file_name,LINKFILE);
 	link_file->SetLinkFile(m_src_file);
-	dst_dir->AddAbstractFile(link_file);
+	int add_res = dst_dir->AddAbstractFile(link_file);
+	if (add_res != ADDSUCCESSED)
+	{
+		VdTool::SafeDeleteSetNull(link_file);
+		PrintAddFileResult(add_res, false);
+		return;
+	}
 	std::cout << "为" << m_src_file_string << "<<===>>" << m_link_string << "创建符号链接" << std::endl;
 }

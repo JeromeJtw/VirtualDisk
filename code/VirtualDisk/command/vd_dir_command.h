@@ -23,12 +23,15 @@ public:
 	bool ParseParameter(VdSystemLogic* vd_system) override;
 	void Execute(VdSystemLogic* vd_system) override;
 	void PrintHelp() override;
+
+private:
 	void PrintCurrentDir(VdSystemLogic* vd_system);
 	void NormalPrint(VdSystemLogic* vd_system);
 	void RecursionPrint(VdSystemLogic* vd_system);
-	void PrintDir(VdSystemLogic* vd_system, std::string dir);
+	void PrintDir(VdSystemLogic* vd_system, std::string& dir);
+
 private:
-	std::string		m_dst_dir = "";
+	std::string		m_dst_dir;
 	bool			m_recursion_print = false;
 	bool			m_print_dir = false;
 };

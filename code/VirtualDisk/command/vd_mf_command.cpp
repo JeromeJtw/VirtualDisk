@@ -28,7 +28,7 @@ bool VdMfCommand::ParseParameter(VdSystemLogic* vd_system)
 	command_parameter.insert(command_parameter.begin(), "placeholdersstring");
 	int n = (int)command_parameter.size();
 	const char* parameters[100];
-	for (int i = 0; i < n; i++)
+	for (int i = 0; i < n; ++i)
 	{
 		parameters[i] = command_parameter[i].c_str();
 	}
@@ -80,22 +80,25 @@ void VdMfCommand::CreateFile(VdSystemLogic* vd_system)
 		return;
 	}
 
-	if (!VdTool::IsVaildFileName(m_file_name))
+	int res = VdTool::IsVaildFileName(m_file_name);
+	if (res == TOOLONG)
 	{
-		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		std::cout << "目标文件名超过" << MAX_NAME_LENGTH << "个字符，无法创建。" << std::endl;
+		return;
+	}
+	if (res == HASINVAILDCHAR)
+	{
+		std::cout << "文件名包含非法字符，无法创建。" << std::endl;
 		return;
 	}
 
-	std::vector<VdAbstractFile*> file_list = current_dir->GetNormalSubFileList();
-	for (auto iter : file_list)
-	{
-		if (iter->GetAbstractFileName() == m_file_name && iter->GetAbstractFileType() == NORMALFILE)
-		{
-			std::cout << "'" << m_file_name << "'" << "已经存在，不能创建名字相同的文件！" << std::endl;
-			return;
-		}
-	}
-
 	VdAbstractFile* new_file = new VdFile(m_file_name, NORMALFILE, m_file_size);
-	current_dir->AddAbstractFile(new_file);
+	int add_res = current_dir->AddAbstractFile(new_file);
+	if (add_res != ADDSUCCESSED)
+	{
+		VdTool::SafeDeleteSetNull(new_file);
+		PrintAddFileResult(add_res, false);
+		return;
+	}
+	std::cout << "文件"<<m_file_name << "创建成功" << std::endl;
 }

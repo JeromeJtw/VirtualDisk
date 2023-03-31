@@ -23,10 +23,14 @@ public:
 	void ClearParameter() override;
 	void Execute(VdSystemLogic* vd_system) override;
 	void PrintHelp() override;
+
+private:
 	void DeleteFile(VdSystemLogic* vd_system);
+	//递归删除文件，不删除文件夹
 	void RecursionDelete(VdSystemLogic* vd_system);
-	void RecursionDeleteFile(VdSystemLogic* vd_system, VdDirectory* work_dir, const std::string vague_name);
-	void PrintResult(const std::string file_name, const int result, const bool is_dir);
+	void RecursionDeleteFile(VdSystemLogic* vd_system, VdDirectory* work_dir, const std::string& vague_name);
+	void PrintResult(const std::string& file_name, const int result, const bool is_dir);
+
 private:
 	std::vector<std::string>	m_dst_file_list;
 	bool						m_recursion_delete = false;

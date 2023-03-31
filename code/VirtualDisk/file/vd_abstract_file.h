@@ -17,15 +17,14 @@ class VdAbstractFile
 {
 
 public:
-	//VdAbstractFile();
-	VdAbstractFile(std::string name, VdFileType file_type);
+	VdAbstractFile(std::string name, int file_type);
 	VdAbstractFile(const VdAbstractFile& file);
 	virtual ~VdAbstractFile();
 
 
 	virtual void PrintPath();
-	virtual void ReName(const std::string new_name);
-	virtual	bool AddAbstractFile(VdAbstractFile* vd_abstract_file);
+	virtual void ReName(const std::string& new_name);
+	virtual	int AddAbstractFile(VdAbstractFile* vd_abstract_file);
 	virtual void PrintFileInfo();
 
 	void SetParent(VdAbstractFile* parent_file);
@@ -34,11 +33,17 @@ public:
 	std::string GetParentPath();
 	int GetAbstractFileType() const { return m_vd_file_type; }
 	std::string GetAbstractFileName() const { return m_name; }
-	std::string GetParentSerializationFileName();
 	std::string GetSerializationFileName();
+	void SetRootFlag(bool root = false) { m_is_root_dir = root; }
+	bool IsRootDir() const { return m_is_root_dir; }
+
+private:
+	std::string GetParentSerializationFileName();
+
 protected:
-	std::string m_name;
-	VdFileType m_vd_file_type;
-	std::string m_time;
-	VdAbstractFile* m_parent;
+	std::string			m_name;
+	int					m_vd_file_type;
+	std::string			m_time;
+	VdAbstractFile*		m_parent;
+	bool				m_is_root_dir = false;
 };

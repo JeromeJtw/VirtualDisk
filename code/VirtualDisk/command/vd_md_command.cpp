@@ -7,7 +7,7 @@
 
 VdMdCommand::VdMdCommand()
 {
-	m_dir_name_list.clear();
+
 }
 
 VdMdCommand::~VdMdCommand()
@@ -30,8 +30,15 @@ bool VdMdCommand::ParseParameter(VdSystemLogic* vd_system)
 	}
 	for (auto para : m_dir_name_list)
 	{
-		if (!VdTool::IsVaildDirName(para))
+		int res = VdTool::IsVaildDirName(para);
+		if (res == TOOLONG)
 		{
+			std::cout << "文件夹名超过" << MAX_NAME_LENGTH << "个字符" << std::endl;
+			return false;
+		}
+		if (res == HASINVAILDCHAR)
+		{
+			std::cout << para <<"文件夹名有非法字符" << std::endl;
 			return false;
 		}
 	}
@@ -71,29 +78,28 @@ void VdMdCommand::MakeDir(VdSystemLogic* vd_system)
 		std::cout << "无法创建文件夹！" << std::endl;
 		return;
 	}
-	
-	int make_dir_nums = (int)m_dir_name_list.size();
-	for (int j = 0; j < make_dir_nums; j++)
+
+	for (auto dir_name : m_dir_name_list)
 	{
-		if (m_dir_name_list[j].find("\\") != std::string::npos || m_dir_name_list[j].find("/") != std::string::npos)
+		if (dir_name.find("\\") != std::string::npos || dir_name.find("/") != std::string::npos)
 		{
-			std::cout << "'" << m_dir_name_list[j] << "'" << "语法不正确，无法创建！" << std::endl;
-			continue;
-		}
-		
-		if (current_dir->IsExistFile(m_dir_name_list[j]))
-		{
-			std::cout << "'" << m_dir_name_list[j] << "'" << "已经存在！无法创建同名文件夹！" << std::endl << std::endl;
+			std::cout << "'" << dir_name << "'" << "语法不正确，无法创建！" << std::endl;
 			continue;
 		}
 
-		VdAbstractFile* dir = new VdDirectory(m_dir_name_list[j], DIR);
+		VdAbstractFile* dir = new VdDirectory(dir_name, DIR);
 		if (dir == nullptr)
 		{
-			std::cout << "'" << m_dir_name_list[j] << "'" << "文件夹创建失败" << std::endl;
+			std::cout << "'" << dir_name << "'" << "文件夹创建失败" << std::endl;
 			return;
 		}
-		current_file->AddAbstractFile(dir);
-		std::cout << "'" << m_dir_name_list[j] << "'" << "文件夹创建成功" << std::endl;
+		int res = current_dir->AddAbstractFile(dir);
+		if (res != ADDSUCCESSED)
+		{
+			PrintAddFileResult(res,true);
+			VdTool::SafeDeleteSetNull(dir);
+			continue;
+		}
+		std::cout << "'" << dir_name << "'" << "文件夹创建成功" << std::endl;
 	}
 }

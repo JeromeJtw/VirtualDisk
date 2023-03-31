@@ -69,14 +69,14 @@ void VdRenCommand::ReName(VdSystemLogic* vd_system)
 	{
 		return;
 	}
-	if (m_src_file_name == "." || m_src_file_name == "..")
+	if (m_src_file_name == CURRENTDIRNAME || m_src_file_name == PARENTDIRNAME)
 	{
 		std::cout << "操作不合法！系统无法接受请求的路径或文件名，请对其他文件（夹）重命名！" << std::endl;
 		return;
 	}
-	if (m_dst_file_name == "." || m_dst_file_name == "..")
+	if (m_dst_file_name == CURRENTDIRNAME || m_dst_file_name == PARENTDIRNAME)
 	{
-		std::cout << "操作不合法！请更换为非'.''..'的名字" << std::endl;
+		std::cout << "操作不合法！请更换为非'"<<CURRENTDIRNAME<<"' "<<PARENTDIRNAME<<"'"<<"的名字" << std::endl;
 		return;
 	}
 
@@ -89,17 +89,29 @@ void VdRenCommand::ReName(VdSystemLogic* vd_system)
 
 	if (src_file->GetAbstractFileType() == DIR)
 	{
-		if (!VdTool::IsVaildDirName(m_dst_file_name))
+		int res = VdTool::IsVaildDirName(m_dst_file_name);
+		if (res == TOOLONG)
 		{
-			std::cout << "文件名、目录名语法不正确。" << std::endl;
+			std::cout << "新文件夹名超过"<<MAX_NAME_LENGTH<<"个字符，无法创建。" << std::endl;
+			return;
+		}
+		if (res == HASINVAILDCHAR)
+		{
+			std::cout << "新文件夹名包含非法字符，无法创建。" << std::endl;
 			return;
 		}
 	}
 	else
 	{
-		if (!VdTool::IsVaildFileName(m_dst_file_name))
+		int res = VdTool::IsVaildFileName(m_dst_file_name);
+		if (res == TOOLONG)
 		{
-			std::cout << "文件名、目录名语法不正确。" << std::endl;
+			std::cout << "新文件名超过" << MAX_NAME_LENGTH << "个字符，无法创建。" << std::endl;
+			return;
+		}
+		if (res == HASINVAILDCHAR)
+		{
+			std::cout << "新文件名包含非法字符，无法创建。" << std::endl;
 			return;
 		}
 	}

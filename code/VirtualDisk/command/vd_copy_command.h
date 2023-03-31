@@ -23,6 +23,8 @@ public:
 	bool ParseParameter(VdSystemLogic* vd_system) override;
 	void Execute(VdSystemLogic* vd_system) override;
 	void PrintHelp() override;
+
+private:
 	void Copy(VdSystemLogic* vd_system);
 	void CopyFromPhysicalDisk(VdSystemLogic* vd_system);
 	bool CopyPhysicalDir(VdSystemLogic* vd_system);
@@ -31,9 +33,10 @@ public:
 	void CopyLinkFile(VdSystemLogic* vd_system);
 	void CopyDir(VdSystemLogic* vd_system);
 	void CopyDirToDir(VdSystemLogic* vd_system);
+
 private:
-	std::string					m_scr_file_string = "";
-	std::string					m_dst_file_string = "";
+	std::string					m_scr_file_string;
+	std::string					m_dst_file_string;
 	std::vector<std::string>	m_src_path;
 	std::vector<std::string>	m_dst_path;
 	VdAbstractFile*				m_scr_file = nullptr;
@@ -41,7 +44,7 @@ private:
 
 
 	VdDirectory*				m_dst_dir = nullptr;
-	std::string					m_dst_file_name = "";
+	std::string					m_dst_file_name;
 	bool						m_is_copy_from_physical_disk = false;
 };
 

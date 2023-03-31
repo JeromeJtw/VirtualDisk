@@ -24,11 +24,15 @@ public:
 	void PrintHelp() override;
 	void ClearParameter() override;
 
-	bool RemoveDir(VdSystemLogic* vd_system);
-	void RecursionRemoveDir(VdSystemLogic* vd_system);
 private:
-	bool m_is_recursion_delete = false;
-	std::vector<std::string> m_dst_file_list;
+	bool RemoveDir(VdSystemLogic* vd_system);
+	
+	//递归删除指定文件夹内所有文件
+	void RecursionRemoveDir(VdSystemLogic* vd_system);
+
+private:
+	bool						m_is_recursion_delete = false;
+	std::vector<std::string>	m_dst_file_list;
 };
 
 REGISTER_COMMAND_FACTORY(VdRdCommand, "rd");

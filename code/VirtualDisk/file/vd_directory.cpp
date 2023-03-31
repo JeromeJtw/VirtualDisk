@@ -1,9 +1,11 @@
+#include "../tool/vd_tool.h"
 #include "vd_directory.h"
 #include "vd_link_file.h"
 #include <iostream>
 #include <regex>
 
-VdDirectory::VdDirectory(std::string name, VdFileType file_type)
+
+VdDirectory::VdDirectory(std::string name, int file_type)
 			:VdAbstractFile(name, file_type)
 {
 	AddDefaultDir();
@@ -19,31 +21,35 @@ void VdDirectory::PrintPath()
 	VdAbstractFile::PrintPath();
 }
 
-bool VdDirectory::AddAbstractFile(VdAbstractFile* vd_abstract_file)
+int VdDirectory::AddAbstractFile(VdAbstractFile* vd_abstract_file)
 {
-	if (IsExistFile(vd_abstract_file->GetAbstractFileName()))
+	std::string file_name = this->GetCurrentPath() + "/" + vd_abstract_file->GetAbstractFileName();
+	if (file_name.size() > MAX_PATH_LENGTH)
 	{
-		return false;
+		return PATHTOOLONG;
+	}
+	if (IsExistFile(vd_abstract_file))
+	{
+		return EXISTSAMENAMEFILE;
 	}
 	vd_abstract_file->SetParent(this);
 	m_file_list.emplace_back(vd_abstract_file);
-	return true;
+	return ADDSUCCESSED;
 }
-
 
 void VdDirectory::AddDefaultDir()
 {
-	VdLinkFile* dir1 = new VdLinkFile(".", DIR);
+	VdLinkFile* dir1 = new VdLinkFile(CURRENTDIRNAME, DIR);
 	dir1->SetLinkFile(this);
-	VdLinkFile* dir2 = new VdLinkFile("..", DIR);
+	VdLinkFile* dir2 = new VdLinkFile(PARENTDIRNAME, DIR);
 	dir2->SetLinkFile(this->GetParent());
 	AddAbstractFile(dir1);
 	AddAbstractFile(dir2);
 }
 
-int VdDirectory::RemoveSubDirByName(const std::string name)
+int VdDirectory::RemoveSubDirByName(const std::string& name)
 {
-	if (name == "." || name == "..")
+	if (name == CURRENTDIRNAME || name == PARENTDIRNAME)
 	{
 		return CANNOTRM;
 	}
@@ -64,6 +70,7 @@ int VdDirectory::RemoveSubDirByName(const std::string name)
 				if (dir->GetNormalSubFileList().size() == 0) 
 				{
 					delete (*iter);
+					*iter = nullptr;
 					m_file_list.erase(iter);
 					return SUCCESSED;
 				}
@@ -86,15 +93,16 @@ void VdDirectory::RemoveSubDir(VdAbstractFile* dir)
 		if ((*iter)->GetAbstractFileName() == dir->GetAbstractFileName() && (*iter)->GetAbstractFileType() == DIR)
 		{
 			delete *iter;
+			*iter = nullptr;
 			m_file_list.erase(iter);
 			break;
 		}
 	}
 }
 
-void VdDirectory::EraseSubFileByName(const std::string name)
+void VdDirectory::EraseSubFileByName(const std::string& name)
 {
-	if (name == "." || name == "..")
+	if (name == CURRENTDIRNAME || name == PARENTDIRNAME)
 	{
 		return;
 	}
@@ -109,10 +117,9 @@ void VdDirectory::EraseSubFileByName(const std::string name)
 	}
 }
 
-
-int VdDirectory::DeleteSubFileByName(const std::string name)
+int VdDirectory::DeleteSubFileByName(const std::string& name)
 {
-	if (name == "." || name == "..")
+	if (name == CURRENTDIRNAME || name == PARENTDIRNAME)
 	{
 		return CANNOTRM;
 	}
@@ -126,6 +133,7 @@ int VdDirectory::DeleteSubFileByName(const std::string name)
 				|| (*iter)->GetAbstractFileType() == LINKFILE)
 			{
 				delete (*iter);
+				*iter = nullptr;
 				m_file_list.erase(iter);
 				return SUCCESSED;
 			}
@@ -159,7 +167,7 @@ void VdDirectory::DeleteAllNormalFile()
 	}
 }
 
-void VdDirectory::RecursionDeleteSubFileByName(const std::string name, const bool is_print_info /*= true*/)
+void VdDirectory::RecursionDeleteSubFileByName(const std::string& name, const bool is_print_info /*= true*/)
 {
 	if (m_file_list.size() == 0)
 	{
@@ -199,7 +207,7 @@ void VdDirectory::RecursionDeleteAllFile()
 		}
 		else
 		{
-			if ((*iter)->GetAbstractFileName() == "." || (*iter)->GetAbstractFileName() == "..")
+			if ((*iter)->GetAbstractFileName() == CURRENTDIRNAME || (*iter)->GetAbstractFileName() == PARENTDIRNAME)
 			{
 				iter++;
 				continue;
@@ -242,7 +250,7 @@ std::vector<VdAbstractFile*> VdDirectory::GetNormalSubFileList() const
 	return normal_file_list;
 }
 
-std::vector<VdAbstractFile*> VdDirectory::GetNormalSubFileByVagueName(const std::string vague_name) const
+std::vector<VdAbstractFile*> VdDirectory::GetNormalSubFileByVagueName(const std::string& vague_name) const
 {
 	std::vector<VdAbstractFile*> file_list;
 	std::regex regex(vague_name);
@@ -262,8 +270,8 @@ std::vector<VdDirectory*> VdDirectory::GetDir() const
 	for (auto iter : m_file_list)
 	{
 		if (iter->GetAbstractFileType() == DIR && 
-			iter->GetAbstractFileName() != "." && 
-			iter->GetAbstractFileName() != "..")
+			iter->GetAbstractFileName() != CURRENTDIRNAME &&
+			iter->GetAbstractFileName() != PARENTDIRNAME)
 		{
 			VdDirectory* dir = dynamic_cast<VdDirectory*>(iter);
 			dir_list.emplace_back(dir);
@@ -272,7 +280,7 @@ std::vector<VdDirectory*> VdDirectory::GetDir() const
 	return dir_list;
 }
 
-VdAbstractFile* VdDirectory::GetSubFileByName(const std::string name)
+VdAbstractFile* VdDirectory::GetSubFileByName(const std::string& name)
 {
 	for (auto iter = m_file_list.begin(); iter != m_file_list.end();iter++)
 	{
@@ -284,7 +292,7 @@ VdAbstractFile* VdDirectory::GetSubFileByName(const std::string name)
 	return nullptr;
 }
 
-void VdDirectory::RecursionPrintFileInfo(const bool is_only_print_dir, int& file_count, int& dir_count)
+void VdDirectory::RecursionPrintFileInfo(bool is_only_print_dir, int& file_count, int& dir_count)
 {
 	std::string dir_path = this->IsRootDir() ? this->GetCurrentPath() + "\\" : this->GetCurrentPath();
 	std::cout << std::endl << dir_path << " 的目录" << std::endl;
@@ -313,6 +321,7 @@ void VdDirectory::RecursionPrintFileInfo(const bool is_only_print_dir, int& file
 	std::cout << "                               " << file_num << "个文件" << std::endl;
 	std::cout << "                               " << dir_num << "个目录" << std::endl;
 
+	//对文件的绝对路径长度做了限制，不能超过1024个字符，所以文件层级是有限的，不会出现无限递归
 	for (auto iter : m_file_list)
 	{
 		if (iter->GetAbstractFileType() == DIR)
@@ -328,11 +337,35 @@ void VdDirectory::RecursionPrintFileInfo(const bool is_only_print_dir, int& file
 	dir_count += dir_num;
 }
 
-bool VdDirectory::IsExistFile(const std::string name)
+bool VdDirectory::IsExistFile(const std::string& name)
 {
 	for (auto iter : m_file_list)
 	{
 		if (iter->GetAbstractFileName() == name)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool VdDirectory::IsExistFile(VdAbstractFile* file)
+{
+	for (auto iter : m_file_list)
+	{
+		if (file->GetAbstractFileName() == iter->GetAbstractFileName())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool VdDirectory::IsExistDir(const std::string& name)
+{
+	for (auto iter : m_file_list)
+	{
+		if (iter->GetAbstractFileType() == DIR && iter->GetAbstractFileName() == name)
 		{
 			return true;
 		}

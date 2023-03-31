@@ -18,12 +18,15 @@ class VdMdCommand : public VdCommand
 public:
 	VdMdCommand();
 	virtual ~VdMdCommand();
-	
+
 	void ClearParameter() override;
 	bool ParseParameter(VdSystemLogic* vd_system) override;
 	void Execute(VdSystemLogic* vd_system) override;
 	void PrintHelp() override;
+
+private:
 	void MakeDir(VdSystemLogic* vd_system);
+
 private:
 	std::vector<std::string> m_dir_name_list;
 };

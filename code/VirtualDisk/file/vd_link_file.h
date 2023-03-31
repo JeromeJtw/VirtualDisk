@@ -24,7 +24,7 @@ public:
 	void PrintFileInfo() override;
 	void SetLinkFile(VdAbstractFile* link_file);
 	VdAbstractFile* GetLinkFile() const { return m_link_file; }
-	void SetLinkFilePath(const std::string file_path);
+	void SetLinkFilePath(const std::string& file_path);
 	std::string GetLinkFilePath() const { return m_link_file_path; }
 private:
 	VdAbstractFile* m_link_file;
