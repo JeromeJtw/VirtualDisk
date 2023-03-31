@@ -111,9 +111,15 @@ void VdMoveCommand::MoveDir(VdSystemLogic* vd_system)
 		new_file_name = m_dst_path[0];
 	}
 
-	if (!VdTool::IsVaildDirName(new_file_name))
+	int res = VdTool::IsVaildDirName(new_file_name);
+	if (res == TOOLONG)
 	{
-		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		std::cout << "新文件夹名超过" << MAX_NAME_LENGTH << "个字符，无法移动" << std::endl;
+		return;
+	}
+	if (res == HASINVAILDCHAR)
+	{
+		std::cout << "新文件夹名有非法字符，无法移动" << std::endl;
 		return;
 	}
 
@@ -126,6 +132,14 @@ void VdMoveCommand::MoveDir(VdSystemLogic* vd_system)
 
 	VdDirectory* new_parent = dynamic_cast<VdDirectory*>(m_dst_file);
 	VdDirectory* old_parent = dynamic_cast<VdDirectory*>(m_src_file->GetParent());
+	int new_path_size = (int)(new_parent->GetCurrentPath() + "/" + new_file_name).size();
+	if (new_path_size > MAX_PATH_LENGTH)
+	{
+		std::cout << "移动后路径长度超过" << MAX_PATH_LENGTH << "个字符，无法移动。" << std::endl;
+		VdTool::SafeSetNull(new_parent);
+		VdTool::SafeSetNull(old_parent);
+		return;
+	}
 	old_parent->EraseSubFileByName(m_src_file->GetAbstractFileName());
 	m_src_file->ReName(new_file_name);
 	//ovveride 确保目标路径中同名文件夹销毁
@@ -135,7 +149,6 @@ void VdMoveCommand::MoveDir(VdSystemLogic* vd_system)
 		dir->RecursionDestoryDir();
 	}
 	new_parent->RecursionDeleteSubFileByName(new_file_name, false);
-	
 	new_parent->AddAbstractFile(m_src_file);
 	std::cout << "移动了		" << 1 << "个文件夹" << std::endl;
 }
@@ -160,9 +173,15 @@ void VdMoveCommand::MoveNormalFile(VdSystemLogic* vd_system)
 		new_file_name = m_dst_path[0];
 	}
 
-	if (!VdTool::IsVaildFileName(new_file_name))
+	int res = VdTool::IsVaildFileName(new_file_name);
+	if (res == TOOLONG)
 	{
-		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		std::cout << "新文件名超过" << MAX_NAME_LENGTH << "个字符，无法移动。" << std::endl;
+		return;
+	}
+	if (res == HASINVAILDCHAR)
+	{
+		std::cout << "新文件名包含非法字符，无法移动。" << std::endl;
 		return;
 	}
 	
@@ -170,6 +189,13 @@ void VdMoveCommand::MoveNormalFile(VdSystemLogic* vd_system)
 	if (dst_dir->IsExistFile(new_file_name) && !m_is_override)
 	{
 		std::cout << "存在相同名字的文件无法移动" << std::endl;
+		return;
+	}
+
+	int new_path_size = (int)(dst_dir->GetCurrentPath() + "/" + new_file_name).size();
+	if (new_path_size > MAX_PATH_LENGTH)
+	{
+		std::cout << "移动后路径长度超过" << MAX_PATH_LENGTH << "个字符，无法移动。" << std::endl;
 		return;
 	}
 

@@ -8,10 +8,11 @@
 #include <algorithm>
 #include <iostream>
 #include <regex>
+static const std::string HELPFLAGSTRING = "/?";
 
 VdSystemLogic::~VdSystemLogic()
 {
-
+	DestroyVdSystem();
 }
 
 VdSystemLogic::VdSystemLogic()
@@ -22,31 +23,32 @@ VdSystemLogic::VdSystemLogic()
 void VdSystemLogic::CreateRootDir()
 {
 	m_root = new VdDirectory("RootDir", DIR);
-	VdDirectory* m_root_dir = dynamic_cast<VdDirectory*>(m_root);
-	m_root_dir->SetRootFlag(true);
+	m_root->SetRootFlag(true);
 }
 
 void VdSystemLogic::InitVdSystem()
 {
 	CreateRootDir();
-	VdDirectory* disk_c = new VdDirectory("C:", DIR);
-	VdDirectory* disk_d = new VdDirectory("D:", DIR);
-	VdDirectory* disk_e = new VdDirectory("E:", DIR);
-	disk_c->SetRootFlag(true);
-	disk_d->SetRootFlag(true);
-	disk_e->SetRootFlag(true);
-	m_root->AddAbstractFile(disk_c);
-	m_root->AddAbstractFile(disk_d);
-	m_root->AddAbstractFile(disk_e);
-	m_current_file_node = disk_c;
-	m_active_file_node = disk_c;
+	m_current_file_node = new VdDirectory(ROOTDISKNAME, DIR);
+	m_current_file_node->SetRootFlag(true);
+	m_root->AddAbstractFile(m_current_file_node);
+	m_active_file_node = m_current_file_node;
+}
+
+void VdSystemLogic::DestroyVdSystem()
+{
+	RecursionDestroyFile(m_root);
+	VdTool::SafeSetNull(m_root);
+	VdTool::SafeSetNull(m_current_file_node);
+	VdTool::SafeSetNull(m_active_file_node);
+	m_command_para.clear();
 }
 
 void VdSystemLogic::PrintInitInfo(bool is_print_current_path /*= true*/)
 {
 	std::cout << "******************************************************************************" << std::endl;
 	std::cout << "***                      Welcome to Virtual Disk System                    ***" << std::endl;
-	std::cout << "*** There are three CDE disks in total, and the default is on the C drive. ***" << std::endl;
+	std::cout << "***                         There is only C drive.                         ***" << std::endl;
 	std::cout << "*** You can use commands like dir/md/rd/cd/del/copy/ren/move/mklink/save.  ***" << std::endl;
 	std::cout << "***                  (C)Jiantingwu Corporation. 保留所有权利.              ***" << std::endl;
 	std::cout << "******************************************************************************" << std::endl;
@@ -57,7 +59,7 @@ void VdSystemLogic::PrintInitInfo(bool is_print_current_path /*= true*/)
 	}
 }
 
-void VdSystemLogic::HandleCommand(std::string input_cmd)
+void VdSystemLogic::HandleCommand(std::string& input_cmd)
 {
 	std::string delimiter = " ";
 	SplitCommandString(input_cmd, delimiter);
@@ -78,7 +80,7 @@ void VdSystemLogic::HandleCommand(std::string input_cmd)
 		return;
 	}
 
-	if (m_command_para.size() == 2 && m_command_para[1] == "/?")
+	if (m_command_para.size() == 2 && m_command_para[1] == HELPFLAGSTRING)
 	{
 		std::cout << std::endl;
 		command->PrintHelp();
@@ -90,10 +92,11 @@ void VdSystemLogic::HandleCommand(std::string input_cmd)
 	command->Execute(this);
 }
 
-
 void VdSystemLogic::PrintCurrentPath()
 {
 	VdDirectory* dir = dynamic_cast<VdDirectory*>(m_current_file_node);
+	if (dir == nullptr)
+		return;
 	if (dir->IsRootDir())
 	{
 		std::cout << m_current_file_node->GetCurrentPath() + "\\>";
@@ -138,7 +141,33 @@ std::string VdSystemLogic::GetCommandName()
 	return "";
 }
 
-bool VdSystemLogic::ChangeActiveDir(std::string dir_name)
+void VdSystemLogic::RecursionDestroyFile(VdAbstractFile* file)
+{
+	if (file == nullptr)
+		return;
+	if (file->GetAbstractFileType() == DIR)
+	{
+		VdDirectory* dir = dynamic_cast<VdDirectory*>(file);
+		if (dir == nullptr)
+		{
+			// .和.. 文件夹
+			VdTool::SafeDeleteSetNull(file);
+			return;
+		}
+		std::vector<VdAbstractFile*> node_list = dir->GetSubFileList();
+		for (auto iter = node_list.begin(); iter != node_list.end(); ++iter)
+		{
+			RecursionDestroyFile(*iter);
+		}
+		VdTool::SafeDeleteSetNull(dir);
+	}
+	else
+	{
+		VdTool::SafeDeleteSetNull(file);
+	}
+}
+
+bool VdSystemLogic::ChangeActiveDir(const std::string& dir_name)
 {
 	VdAbstractFile* current_file = this->GetCurrentFile();
 	VdAbstractFile* active_file = this->GetActiveFile();
@@ -153,16 +182,13 @@ bool VdSystemLogic::ChangeActiveDir(std::string dir_name)
 	std::vector<VdAbstractFile*> sub_file_list = active_dir->GetSubFileList();
 	bool exist = false;
 
-	int file_num = (int)sub_file_list.size();
-	for (int i = 0; i < file_num; i++)
+	for (auto iter : sub_file_list)
 	{
-		if (sub_file_list[i]->GetAbstractFileType() == DIR && sub_file_list[i]->GetAbstractFileName() == dir_name)
+		if (iter->GetAbstractFileType() == DIR && iter->GetAbstractFileName() == dir_name)
 		{
-			if (dir_name == ".")
-			{
+			if (dir_name == CURRENTDIRNAME)
 				this->SetActiveFile(active_file);
-			}
-			else if (dir_name == "..")
+			else if (dir_name == PARENTDIRNAME)
 			{
 				if (active_dir->IsRootDir())
 				{
@@ -175,7 +201,7 @@ bool VdSystemLogic::ChangeActiveDir(std::string dir_name)
 			}
 			else
 			{
-				this->SetActiveFile(sub_file_list[i]);
+				this->SetActiveFile(iter);
 			}
 			exist = true;
 			break;
@@ -212,13 +238,13 @@ VdAbstractFile* VdSystemLogic::GetFileByPath(const std::vector<std::string>& pat
 		bool exist = false;
 		for (auto file_iter : sub_file_list)
 		{
-			if (file_iter->GetAbstractFileName() == iter && iter == "..")
+			if (file_iter->GetAbstractFileName() == iter && iter == PARENTDIRNAME)
 			{
 				active_file = active_file->GetParent();
 				exist = true;
 				break;
 			}
-			else if (file_iter->GetAbstractFileName() == iter && iter == ".")
+			else if (file_iter->GetAbstractFileName() == iter && iter == CURRENTDIRNAME)
 			{
 				exist = true;
 				break;
@@ -275,21 +301,21 @@ bool VdSystemLogic::GetFileByPath(std::vector<VdAbstractFile*>& file_list, const
 		std::regex regex(iter);
 		for (auto file_iter : sub_file_list)
 		{
-			if (file_iter->GetAbstractFileName() == iter && iter == "..")
+			if (file_iter->GetAbstractFileName() == iter && iter == PARENTDIRNAME)
 			{
 				active_file = active_file->GetParent();
 				exist = true;
 				break;
 			}
-			else if (file_iter->GetAbstractFileName() == iter && iter == ".")
+			else if (file_iter->GetAbstractFileName() == iter && iter == CURRENTDIRNAME)
 			{
 				exist = true;
 				break;
 			}
 			else if (std::regex_match(file_iter->GetAbstractFileName(), regex))
 			{
-				if (file_iter->GetAbstractFileName() == "." ||
-					file_iter->GetAbstractFileName() == "..")
+				if (file_iter->GetAbstractFileName() == CURRENTDIRNAME ||
+					file_iter->GetAbstractFileName() == PARENTDIRNAME)
 				{
 					continue;
 				}

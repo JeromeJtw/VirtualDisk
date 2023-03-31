@@ -4,6 +4,12 @@
 #include <sstream>
 #include <random>
 
+
+static std::vector<char> invaild_file_name_char = { '*', '?', ':', '<', '>', '|' };
+static std::vector<char> invaild_dir_name_char = { '*', '?', ':', '<', '>', '|', '.' };
+std::unordered_map<int, std::string> FILE_TYPE_STRING = { {(int)DIR,"<DIR>"},{(int)NORMALFILE,""},{(int)LINKFILE,"<SYMLINK>"} };
+
+
 namespace VdTool {
 	std::vector<std::string> SplitString(const std::string& src, const std::string& delimiter)
 	{
@@ -19,45 +25,45 @@ namespace VdTool {
 			return result;
 		}
 
-		std::string::size_type startPos = 0;
+		std::string::size_type start_pos = 0;
 		auto index = src.find(delimiter);
 		while (index != std::string::npos) {
-			auto str = src.substr(startPos, index - startPos);
+			auto str = src.substr(start_pos, index - start_pos);
 			if (str != "") {
 				result.push_back(str);
 			}
-			startPos = index + delimiter.length();
-			index = src.find(delimiter, startPos);
+			start_pos = index + delimiter.length();
+			index = src.find(delimiter, start_pos);
 		}
 		// 取最后一个子串
-		auto str = src.substr(startPos);
+		auto str = src.substr(start_pos);
 		if (str != "") {
 			result.push_back(str);
 		}
 		return result;
 	}
 
-	std::vector<std::string> SplitStringBySpace(const std::string str)
+	std::vector<std::string> SplitStringBySpace(const std::string& str)
 	{
 		std::vector<std::string> v;
 		int len = (int)str.length();
 		int start = 0;
-		bool inQuote = false;
-		for (int i = 0; i <= len; i++)
+		bool is_in_quote = false;
+		for (int i = 0; i <= len; ++i)
 		{
 			if (str[i] == '"')
 			{
-				inQuote = !inQuote;
+				is_in_quote = !is_in_quote;
 			}
 			else if (str[i] == ' ' || str[i] == '\0')
 			{
-				if (!inQuote)
+				if (!is_in_quote)
 				{
-					int wordLen = i - start;
-					if (wordLen > 0)
+					int word_len = i - start;
+					if (word_len > 0)
 					{
 						std::string substr;
-						substr = str.substr(start, wordLen);
+						substr = str.substr(start, word_len);
 						v.push_back(substr);
 					}
 					start = i + 1;
@@ -69,9 +75,9 @@ namespace VdTool {
 
 	void ClearQuote(std::vector<std::string>& string_list)
 	{
-		for (int i = 0; i < string_list.size(); i++)
+		for (int i = 0; i < string_list.size(); ++i)
 		{
-			std::string str = string_list[i];
+			std::string& str = string_list[i];
 			for (auto iter = str.begin(); iter != str.end();)
 			{
 				if ((*iter) == '"')
@@ -81,7 +87,6 @@ namespace VdTool {
 				}
 				iter++;
 			}
-			string_list[i] = str;
 		}
 	}
 
@@ -121,27 +126,36 @@ namespace VdTool {
 		}
 	}
 
-	bool IsVaildFileName(const std::string& name)
+	int IsVaildFileName(const std::string& name)
 	{
-		if (name.find('*') != std::string::npos || name.find('?') != std::string::npos ||
-			name.find(':') != std::string::npos || name.find('<') != std::string::npos ||
-			name.find('>') != std::string::npos || name.find('|') != std::string::npos )
+		if (name.size() > MAX_NAME_LENGTH)
 		{
-			return false;
+			return TOOLONG;
 		}
-		return true;
+		for (auto iter : invaild_file_name_char)
+		{
+			if (name.find(iter) != std::string::npos)
+			{
+				return HASINVAILDCHAR;
+			}
+		}
+		return VAILDNAME;
 	}
 
-	bool IsVaildDirName(const std::string& name)
+	int IsVaildDirName(const std::string& name)
 	{
-		if (name.find('*') != std::string::npos || name.find('?') != std::string::npos ||
-			name.find(':') != std::string::npos || name.find('<') != std::string::npos ||
-			name.find('>') != std::string::npos || name.find('|') != std::string::npos ||
-			name.find('.') != std::string::npos)
+		if (name.size() > MAX_NAME_LENGTH)
 		{
-			return false;
+			return TOOLONG;
 		}
-		return true;
+		for (auto iter : invaild_dir_name_char)
+		{
+			if (name.find(iter) != std::string::npos)
+			{
+				return HASINVAILDCHAR;
+			}
+		}
+		return VAILDNAME;
 	}
 
 	int GetFileTypeByPath(const char* path)
@@ -168,25 +182,25 @@ namespace VdTool {
 		}
 	}
 
-	void GetFilesByPath(std::string path, std::vector<std::string>& files)
+	void GetFilesByPath(const std::string& path, std::vector<std::string>& files)
 	{
-		intptr_t  hFile = 0;
-		struct _finddata_t fileinfo;
+		intptr_t  file = 0;
+		struct _finddata_t file_info;
 		std::string p;
-		if ((hFile = _findfirst(p.assign(path).append("\\*").c_str(), &fileinfo)) != -1)
+		if ((file = _findfirst(p.assign(path).append("\\*").c_str(), &file_info)) != -1)
 		{
 			do
 			{
-				if ((fileinfo.attrib &  _A_SUBDIR))
+				if ((file_info.attrib &  _A_SUBDIR))
 				{
 					;
 				}
 				else
 				{
-					files.push_back(fileinfo.name);
+					files.push_back(file_info.name);
 				}
-			} while (_findnext(hFile, &fileinfo) == 0);
-			_findclose(hFile);
+			} while (_findnext(file, &file_info) == 0);
+			_findclose(file);
 		}
 	}
 
@@ -201,11 +215,11 @@ namespace VdTool {
 	std::string GenerateHex(const unsigned int len)
 	{
 		std::stringstream ss;
-		for (unsigned int i = 0; i < len; i++) {
+		for (unsigned int i = 0; i < len; ++i) {
 			const auto rc = RandomChar();
-			std::stringstream hexstream;
-			hexstream << std::hex << rc;
-			auto hex = hexstream.str();
+			std::stringstream hex_stream;
+			hex_stream << std::hex << rc;
+			auto hex = hex_stream.str();
 			ss << (hex.length() < 2 ? '0' + hex : hex);
 		}
 		return ss.str();
@@ -215,10 +229,10 @@ namespace VdTool {
 	{
 		std::vector<std::string> file_path_dir = SplitString(path, "/");
 		std::string path_string = "";
-		for (int i = 0; i < file_path_dir.size(); i++)
+		for (auto file_path_name : file_path_dir)
 		{
-			path_string += file_path_dir[i] + "/";
-			if(_access(path_string.c_str(),0) == -1)
+			path_string += file_path_name + "/";
+			if (_access(path_string.c_str(), 0) == -1)
 			{
 				if (mkdir(path_string.c_str()) == -1)
 				{
@@ -229,6 +243,3 @@ namespace VdTool {
 		return true;
 	}
 }
-
-std::unordered_map<int, std::string> FILE_TYPE_STRING = { {(int)DIR,"<DIR>"},{(int)NORMALFILE,""},{(int)LINKFILE,"<SYMLINK>"} };
-

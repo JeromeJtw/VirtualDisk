@@ -47,7 +47,7 @@ void VdLinkFile::SetLinkFile(VdAbstractFile* link_file)
 	}
 }
 
-void VdLinkFile::SetLinkFilePath(const std::string file_path)
+void VdLinkFile::SetLinkFilePath(const std::string& file_path)
 {
 	m_link_file_path = file_path;
 }

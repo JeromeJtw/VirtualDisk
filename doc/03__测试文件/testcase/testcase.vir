@@ -1,0 +1,23 @@
+ViskDiskFile
+时间：2023/03/30  16:47:53
+姓名: jiantingwu
+=================================
+1 C:
+*3 "aalink" "C:\aa"
+*3 "aaalink" "C:\aa"
+*2 "dircopy" 0 "VituralDiskCdircopy"
+*1 dir
+*1 dir dir
+**1 subdir
+**1 subdir测试
+**1 sub dir
+*1 dir测试
+**2 "a.dll" 7231488 "VituralDiskCdir测试a.dll"
+*2 "vd_load_command.cpp" 6079 "VituralDiskCvd_load_command.cpp"
+*2 "a.dll" 7231488 "VituralDiskCa.dll"
+*2 "audio_engine.dll" 1218560 "VituralDiskCaudio_engine.dll"
+*2 "aa" 1 "VituralDiskCaa"
+*2 "aa a" 1 "VituralDiskCaa a"
+*2 "aa b" 0 "VituralDiskCaa b"
+*2 "aa " 0 "VituralDiskCaa "
+*2 "项目介绍.docx" 33707 "VituralDiskC项目介绍.docx"

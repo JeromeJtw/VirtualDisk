@@ -15,6 +15,7 @@
 
 class VdAbstractFile;
 class VdLinkFile;
+class VdDirectory;
 class VdSystemLogic
 {
 
@@ -23,31 +24,34 @@ public:
 
 	static VdSystemLogic* GetVdSystem();
 
-	void CreateRootDir();
 	void InitVdSystem();
+	void DestroyVdSystem();
 	void PrintInitInfo(bool is_print_current_path = true);
-	void HandleCommand(std::string input_cmd);
+	void HandleCommand(std::string& input_cmd);
 	void PrintCurrentPath();
 	VdAbstractFile* GetCurrentFile() const;
 	void SetCurrentFile(VdAbstractFile* current_file);
 	VdAbstractFile* GetActiveFile() const;
 	void SetActiveFile(VdAbstractFile* active_file);
-	void SplitCommandString(const std::string& src, const std::string& delimiter);
-	std::string GetCommandName();
 	std::vector<std::string> GetCommandPara() const { return m_command_para; }
-	bool ChangeActiveDir(std::string dir_name);
+	bool ChangeActiveDir(const std::string& dir_name);
 	VdAbstractFile* GetFileByPath(const std::vector<std::string>& path);
 	bool GetFileByPath(std::vector<VdAbstractFile*>& file_list, const std::vector<std::string>& path);
-	VdAbstractFile* GetDiskRoot() const { return m_root; }
+	VdDirectory* GetDiskRoot() const { return m_root; }
 	void PostHandleLinkFile(VdLinkFile* link_file);
 private:
 	explicit VdSystemLogic();
 	VdSystemLogic(const VdSystemLogic&) = delete;
 	VdSystemLogic(VdSystemLogic&&) = delete;
 
+	void CreateRootDir();
+	void SplitCommandString(const std::string& src, const std::string& delimiter);
+	std::string GetCommandName();
+	void RecursionDestroyFile(VdAbstractFile* file);
+
 private:
-	VdAbstractFile* m_root = nullptr;
-	VdAbstractFile* m_current_file_node = nullptr;
-	VdAbstractFile* m_active_file_node = nullptr;
-	std::vector<std::string> m_command_para;
+	VdDirectory*				m_root = nullptr;
+	VdAbstractFile*				m_current_file_node = nullptr;
+	VdAbstractFile*				m_active_file_node = nullptr;
+	std::vector<std::string>	m_command_para;
 };

@@ -20,11 +20,14 @@ public:
 	VdCdCommand();
 	virtual ~VdCdCommand();
 
-	void ClearParameter() override;
 	bool ParseParameter(VdSystemLogic* vd_system) override;
+	void ClearParameter() override;
 	void Execute(VdSystemLogic* vd_system) override;
 	void PrintHelp() override;
-	bool ChangeCurrentDir(VdSystemLogic* vd_system, std::string dir_name);
+
+private:
+	bool ChangeCurrentDir(VdSystemLogic* vd_system, const std::string& dir_name);
+
 private:
 	std::string m_dst_path;
 };

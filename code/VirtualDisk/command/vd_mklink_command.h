@@ -23,11 +23,13 @@ public:
 	bool ParseParameter(VdSystemLogic* vd_system) override;
 	virtual void Execute(VdSystemLogic* vd_system) override;
 	virtual void PrintHelp() override;
+
+private:
 	void MakeLink(VdSystemLogic* vd_system);
 
 private:
-	std::string			m_src_file_string = "";
-	std::string			m_link_string = "";
+	std::string			m_src_file_string;
+	std::string			m_link_string;
 	VdAbstractFile*		m_src_file = nullptr;
 };
 

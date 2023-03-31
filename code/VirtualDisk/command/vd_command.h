@@ -29,5 +29,6 @@ public:
 	virtual void Execute(VdSystemLogic* vd_system);
 	virtual void PostExecute(VdSystemLogic* vd_system);
 	virtual void PrintHelp();
+	void PrintAddFileResult(int result_type, int is_dir);
 };
 

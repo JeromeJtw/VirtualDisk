@@ -5,6 +5,7 @@
 #include "vd_rd_command.h"
 #include <algorithm>
 #include <iostream>
+static const std::string RDRECURSIONFLAG = "/s";
 
 VdRdCommand::VdRdCommand()
 {
@@ -44,7 +45,7 @@ void VdRdCommand::Execute(VdSystemLogic* vd_system)
 bool VdRdCommand::ParseParameter(VdSystemLogic* vd_system)
 {
 	std::vector<std::string> command_parameter = vd_system->GetCommandPara();
-	auto iter = std::find(command_parameter.begin(), command_parameter.end(), "/s");
+	auto iter = std::find(command_parameter.begin(), command_parameter.end(), RDRECURSIONFLAG);
 	if (iter != command_parameter.end())
 	{
 		m_is_recursion_delete = true;
@@ -76,24 +77,28 @@ bool VdRdCommand::RemoveDir(VdSystemLogic* vd_system)
 	{
 		return false;
 	}
-	for (int i = 0; i < m_dst_file_list.size(); i++)
+	for (auto dst_file : m_dst_file_list)
 	{
-		int result = active_dir->RemoveSubDirByName(m_dst_file_list[i]);
+		int result = active_dir->RemoveSubDirByName(dst_file);
 		switch (result)
 		{
 		case NOTEMPTY:
-			std::cout << "' " << m_dst_file_list[i] << " '" << "不是空目录。" << std::endl;
+			std::cout << "' " << dst_file << " '" << "不是空目录。" << std::endl;
 			break;
 		case ISUSING:
-			std::cout << "' " << m_dst_file_list[i] << " '" << "正在使用。" << std::endl;
+			std::cout << "' " << dst_file << " '" << "正在使用。" << std::endl;
 			break;
 		case CANNOTRM:
-			std::cout << "' " << m_dst_file_list[i] << " '" << "无法删除。" << std::endl;
+			std::cout << "' " << dst_file << " '" << "无法删除。" << std::endl;
 			break;
 		case NOTFIND:
-			std::cout << "系统无法找到" << m_dst_file_list[i] << "文件夹。" << std::endl;
+			std::cout << "系统无法找到" << dst_file << "文件夹。" << std::endl;
+			break;
+		case SUCCESSED:
+			std::cout << dst_file << "文件夹删除成功。" << std::endl;
 			break;
 		default:
+			std::cout << "未知错误。" << std::endl;
 			break;
 		}
 	}
@@ -102,7 +107,6 @@ bool VdRdCommand::RemoveDir(VdSystemLogic* vd_system)
 
 void VdRdCommand::RecursionRemoveDir(VdSystemLogic* vd_system)
 {
-	//TODO：递归删除指定文件夹内所有文件
 	VdDirectory* current_dir = dynamic_cast<VdDirectory*>(vd_system->GetCurrentFile());
 	
 	for (auto iter : m_dst_file_list)

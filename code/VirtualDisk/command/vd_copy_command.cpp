@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+static const char PHYSICALFILEFLAG = '@';
 
 VdCopyCommand::VdCopyCommand()
 {
@@ -39,7 +40,7 @@ bool VdCopyCommand::ParseParameter(VdSystemLogic* vd_system)
 	if (command_para.size() == 2)
 	{
 		m_scr_file_string = command_para[1];
-		if ((*m_scr_file_string.begin()) == '@')
+		if ((*m_scr_file_string.begin()) == PHYSICALFILEFLAG)
 		{
 			m_is_copy_from_physical_disk = true;
 			return true;
@@ -55,7 +56,7 @@ bool VdCopyCommand::ParseParameter(VdSystemLogic* vd_system)
 	}
 	m_scr_file_string = command_para[1];
 	m_dst_file_string = command_para[2];
-	if ((*m_scr_file_string.begin()) == '@')
+	if ((*m_scr_file_string.begin()) == PHYSICALFILEFLAG)
 	{
 		m_is_copy_from_physical_disk = true;
 	}
@@ -74,7 +75,7 @@ void VdCopyCommand::Execute(VdSystemLogic* vd_system)
 		std::cout << "命令语法错误，请重新输入！" << std::endl;
 		return;
 	}
-	if (strcmp(m_scr_file_string.c_str(), m_dst_file_string.c_str()) == 0)
+	if (m_scr_file_string == m_dst_file_string)
 	{
 		std::cout << "无法进行自身复制！" << std::endl;
 		return;
@@ -128,9 +129,15 @@ void VdCopyCommand::Copy(VdSystemLogic* vd_system)
 		m_dst_dir = dynamic_cast<VdDirectory*>(vd_system->GetFileByPath(dst_dir_path));
 	}
 
-	if (!VdTool::IsVaildFileName(m_dst_file_name))
+	int res = VdTool::IsVaildFileName(m_dst_file_name);
+	if (res == TOOLONG)
 	{
-		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		std::cout << "目标文件名超过" << MAX_NAME_LENGTH << "个字符，无法复制。" << std::endl;
+		return;
+	}
+	if (res == HASINVAILDCHAR)
+	{
+		std::cout << "目标文件名包含非法字符，无法复制。" << std::endl;
 		return;
 	}
 
@@ -247,9 +254,15 @@ bool VdCopyCommand::CopyPhysicalFile(VdSystemLogic* vd_system)
 		m_dst_dir = dynamic_cast<VdDirectory*>(vd_system->GetFileByPath(dst_dir_path));
 	}
 
-	if (!VdTool::IsVaildFileName(m_dst_file_name))
+	int res = VdTool::IsVaildFileName(m_dst_file_name);
+	if (res == TOOLONG)
 	{
-		std::cout << "文件名、目录名语法不正确。" << std::endl;
+		std::cout << "目标文件名超过" << MAX_NAME_LENGTH << "个字符，无法复制。" << std::endl;
+		return false;
+	}
+	if (res == HASINVAILDCHAR)
+	{
+		std::cout << "目标文件名包含非法字符，无法复制。" << std::endl;
 		return false;
 	}
 
@@ -267,7 +280,14 @@ bool VdCopyCommand::CopyPhysicalFile(VdSystemLogic* vd_system)
 
 	VdFile* new_file = new VdFile(m_dst_file_name, NORMALFILE, file_size, buffer);
 	delete buffer;
-	m_dst_dir->AddAbstractFile(new_file);
+	buffer = nullptr;
+	int add_res = m_dst_dir->AddAbstractFile(new_file);
+	if (add_res != ADDSUCCESSED)
+	{
+		VdTool::SafeDeleteSetNull(new_file);
+		PrintAddFileResult(add_res, false);
+		return false;
+	}
 	return true;
 }
 
@@ -276,7 +296,13 @@ void VdCopyCommand::CopyNormalFile(VdSystemLogic* vd_system)
 	VdFile *src_file = dynamic_cast<VdFile*>(m_scr_file);
 	VdFile *new_file = new VdFile(*src_file);
 	new_file->ReName(m_dst_file_name);
-	m_dst_dir->AddAbstractFile(new_file);
+	int res = m_dst_dir->AddAbstractFile(new_file);
+	if (res != ADDSUCCESSED)
+	{
+		PrintAddFileResult(res, false);
+		VdTool::SafeDeleteSetNull(new_file);
+		return;
+	}
 }
 
 void VdCopyCommand::CopyLinkFile(VdSystemLogic* vd_system)
@@ -284,7 +310,13 @@ void VdCopyCommand::CopyLinkFile(VdSystemLogic* vd_system)
 	VdLinkFile *src_file = dynamic_cast<VdLinkFile*>(m_scr_file);
 	VdLinkFile *new_file = new VdLinkFile(*src_file);
 	new_file->ReName(m_dst_file_name);
-	m_dst_dir->AddAbstractFile(new_file);
+	int res = m_dst_dir->AddAbstractFile(new_file);
+	if (res != ADDSUCCESSED)
+	{
+		VdTool::SafeDeleteSetNull(new_file);
+		PrintAddFileResult(res, false);
+		return;
+	}
 }
 
 void VdCopyCommand::CopyDir(VdSystemLogic* vd_system)
@@ -301,7 +333,13 @@ void VdCopyCommand::CopyDir(VdSystemLogic* vd_system)
 		}
 	}
 	VdFile* new_file = new VdFile(m_dst_file_name, NORMALFILE, file_size);
-	m_dst_dir->AddAbstractFile(new_file);
+	int res = m_dst_dir->AddAbstractFile(new_file);
+	if (res != ADDSUCCESSED)
+	{
+		VdTool::SafeDeleteSetNull(new_file);
+		PrintAddFileResult(res, false);
+		return;
+	}
 }
 
 void VdCopyCommand::CopyDirToDir(VdSystemLogic* vd_system)
@@ -324,7 +362,13 @@ void VdCopyCommand::CopyDirToDir(VdSystemLogic* vd_system)
 		{
 			dst_dir->DeleteSubFileByName(file->GetAbstractFileName());
 		}
-		dst_dir->AddAbstractFile(new_file);
+		int res = dst_dir->AddAbstractFile(new_file);
+		if (res != ADDSUCCESSED)
+		{
+			VdTool::SafeDeleteSetNull(new_file);
+			PrintAddFileResult(res, false);
+			return;
+		}
 		std::cout << "复制文件 - " << file->GetParentPath() << " 到" << dst_dir->GetCurrentPath() << std::endl;
 	}
 }

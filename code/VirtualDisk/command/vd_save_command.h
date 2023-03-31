@@ -25,9 +25,12 @@ public:
 	bool ParseParameter(VdSystemLogic* vd_system) override;
 	void Execute(VdSystemLogic* vd_system) override;
 	void PrintHelp() override;
+
+private:
 	void Save(VdSystemLogic* vd_system);
 	void SaveDir(VdDirectory* dir, std::string prefix);
 	void SaveFile(VdAbstractFile* save_file, std::string prefix);
+
 private:
 	std::string			m_dst_file;
 	std::string			m_dst_path;
